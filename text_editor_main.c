@@ -14,7 +14,10 @@
     or about other neccessary concepts, such as compiling.
 */
 
-
+/*
+    It may not be necessary, but I included a Makefile and added quite a bit to make it more readable, maintainable, and expandable.
+    I've included a clean 'rule' in the Makefile, which will remove the compiled file by running 'make clean'.
+*/
 
 int main() {
     printf("Hello World!\n");
