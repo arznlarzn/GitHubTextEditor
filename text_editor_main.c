@@ -24,7 +24,25 @@
     There are many steps where I will be going back and forth to create this project. Helps me - Helps you.
 */
 
+//|2| creating a function that will begin to enable raw mode. Many steps following will be disabling flags to create a truly 'raw' mode.
+void enableRawMode() {
+    struct termios raw;
+    //|2| struct termios is a struct variable that holds terminal attributes. Comes in the termios.h library.
+    tcgetattr(STDIN_FILENO, &raw);
+    //|2| tcgetattr() gets the Current Terminal attributes- getting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are storing them at the address of the variable 'raw'.
+    raw.c_lflag &= ~(ECHO);
+    //|2| c_lflag is a flag that Controls the Local behavior of the terminal. We are using the bitwise AND operator to turn off ECHO, a bitmask within c_lflag, a bitfield.
+        //&= is the bitwise AND assignment operator. If we just had &= ECHO, we would turn off ALL other flags except for ECHO. We want to keep the current value, except we turn OFF ECHO by adding the bitwise NOT operator ~.
+        //&= clears specific bits while leaving others unchanged.
+        //!!!DIVE FURTHER INTO BITFIELDS AFTER THIS PROJECT. We are flipping ones and zeros and it'd be too lengthy to explain here.!!!
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    //|2| tcsetattr() sets the terminal attributes. We are setting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are setting them to the attributes stored/changed in the variable 'raw'.
+        //TCSAFLUSH is an argument that specifies when to apply the change. TCSAFLUSH disregards any input that hasn't been read and output that hasn't been written.
+}
+
 int main() {
+    //|2| calling the function to enable raw mode.
+    enableRawMode();
     //|1|-Creating a variable that holds input from the keyboard input stream and name it 'c'
     //|1|-char's hold 1 byte of memory, or 8 bits, so this is enough to hold a single character
     char c;
