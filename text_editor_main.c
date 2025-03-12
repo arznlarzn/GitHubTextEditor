@@ -78,7 +78,7 @@ int main() {
     Anything typed after the letter q will overflow into terminal. -
     |1| */
     /* |5|
-    -We are going to beginning printing characters as the user enters them, however, we are going to check if keys pressed are control characters - characters that cannot be printed- and if they are, we will print the ASCII value.
+    - We are going to beginning printing characters as the user enters them, however, we are going to check if keys pressed are control characters - characters that cannot be printed- and if they are, we will print the ASCII value.
     If the characters pressed are NOT control characters, we will print both their ASCII numbers, followed by their printable characters.
     Below is the if loop that checks if they are control characters, and also prints both their ASCII numbers (and) their printable characters.
     |5| */
