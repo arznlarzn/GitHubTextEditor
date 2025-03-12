@@ -45,6 +45,13 @@ void enableRawMode() {
     //struct termios raw;
     //|3|changing struct termios raw; to- this way it takes the original attributes, and gives us a struct at which we can begin to make changes.
     struct termios raw = orig_termios;
+    /* |7|
+    Now, we are removing an input flag, the first REAL input flag - IXON.
+    The local flags below, ICANON and ISIG, both begin with I, which is supposed to indicate that they are input flags, but they are actually local flags.
+    IXON is an flag that allows the terminal to send a software flow control signal, which is CTRL + S and CTRL + Q. CTRL + S stops the terminal from sending output to the screen, and CTRL + Q resumes output.
+    We are turning this off by using the bitwise AND operator to turn off IXON in the c_iflag bitmask, below-
+    |7| */
+    raw.c_iflag &= ~(IXON);
     //|2| tcgetattr() gets the Current Terminal attributes- getting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are storing them at the address of the variable 'raw'.
     //tcgetattr(STDIN_FILENO, &raw);   |3| we are moving this line to the top of the function and changing it to-
     //|4| - adding the removal of conanical mode to the line below. Now, instead of waiting for the user the press ENTER or RETURN, we are reading input byte-by-byte, also meaning we will exit the moment we press 'Q'.
