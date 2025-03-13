@@ -53,7 +53,9 @@ void enableRawMode() {
     |7| */
     //|9| We are removing the Carriage Return, New Line flag, so that Ctrl + M, or ASCII 13, does not get translated to a New Line character, or ASCII 10.
     //|9| Both Ctrl+M and ENTER now return 13 now, instead of 10. 10 is now, correctly, when we press Ctrl+J.
-    raw.c_iflag &= ~(ICRNL | IXON);
+    // |11| Now, I removing 4 more flags which are likely already off, but it sounds like these used to be critcally assumed part of getting into Raw Mode. They are-
+    // |11| BRKINT, INPCK, ISTRIP, and CS8. These flags are not necessary for modern terminals, but are being removed for the sake of the tutorial.
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     //|2| tcgetattr() gets the Current Terminal attributes- getting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are storing them at the address of the variable 'raw'.
     //tcgetattr(STDIN_FILENO, &raw);   |3| we are moving this line to the top of the function and changing it to-
     //|4| - adding the removal of conanical mode to the line below. Now, instead of waiting for the user the press ENTER or RETURN, we are reading input byte-by-byte, also meaning we will exit the moment we press 'Q'.
@@ -64,6 +66,13 @@ void enableRawMode() {
     We are now turning of output processing, which is our \n or new line character. Before, pressing enter would cause our new line to also carriage return- after adding this, it will not.
     |10| */
     raw.c_oflag &= ~(OPOST);
+    // |11| Below is removing CS8, which is a flag that sets the character size to 8 bits per byte. This is not necessary for modern terminals, but is being removed for the sake of the tutorial.
+    raw.c_cflag |= (CS8);
+    /* |12|
+    So that read() doesn't time out while waiting for user input, we will set it so that it returns ever 100ms, even if no input is given. This is done by setting the VMIN and VTIME flags in the c_cc bitmask.
+    |12| */
+    raw.c_cc[VMIN] = 0; //sets the minimum number of bytes of input needed before read() can return to 0.
+    raw.c_cc[VTIME] = 1; //sets the maximum amount of time to wait before read() returns to 1/10th of a second.
     /* |8|
     We are going to add Ctrl + V's control character, by added the IEXTEN flag to the c_lflag bitmask. This flag will allow us to send a literal character to the terminal by pressing CTRL + V, followed by the character.
     Right now, when pressing Ctrl + V, if you have copied anything to your system with Ctrl + C, it will paste, character by character, in our program. We are removing this built in ability by turning off IEXTEN.
@@ -87,10 +96,16 @@ int main() {
     //|2| calling the function to enable raw mode.
     enableRawMode();
     //|1|-Creating a variable that holds input from the keyboard input stream and name it 'c'
-    //|1|-char's hold 1 byte of memory, or 8 bits, so this is enough to hold a single character
-    char c;
-
-    while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') 
+    //|1|-char's hold 1 byte of memory, or 8 bits, so this is enough to hold a single character- line below: char c;
+    //char c;
+    /* |12| *removing above line char c;*
+    Updating our while loop from 
+        while  (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') 
+    to -
+    |12| */
+    while (1) {
+        char c = '\0';
+        read(STDIN_FILENO, &c, 1);
     /* |1|
     -Now, we need to create a loop that continually reads for the input from the keyboard stream and saves it to the variable 'c'.
 
@@ -107,12 +122,12 @@ int main() {
     Below is the if loop that checks if they are control characters, and also prints both their ASCII numbers (and) their printable characters.
     |5| */
     // |10| To fix our new lines, which no longer carriage return, we must add \r for return, to correctly bring our cursor back to the left side of the screen.
-    {
         if (iscntrl(c)) {
             printf("%d\r\n", c);
         } else {
             printf("%d ('%c')\r\n", c, c);
         }
+        if (c == 'q') break;
     }
     return 0;
 }
