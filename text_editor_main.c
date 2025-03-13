@@ -51,7 +51,9 @@ void enableRawMode() {
     IXON is an flag that allows the terminal to send a software flow control signal, which is CTRL + S and CTRL + Q. CTRL + S stops the terminal from sending output to the screen, and CTRL + Q resumes output.
     We are turning this off by using the bitwise AND operator to turn off IXON in the c_iflag bitmask, below-
     |7| */
-    raw.c_iflag &= ~(IXON);
+    //|9| We are removing the Carriage Return, New Line flag, so that Ctrl + M, or ASCII 13, does not get translated to a New Line character, or ASCII 10.
+    //|9| Both Ctrl+M and ENTER now return 13 now, instead of 10. 10 is now, correctly, when we press Ctrl+J.
+    raw.c_iflag &= ~(ICRNL | IXON);
     //|2| tcgetattr() gets the Current Terminal attributes- getting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are storing them at the address of the variable 'raw'.
     //tcgetattr(STDIN_FILENO, &raw);   |3| we are moving this line to the top of the function and changing it to-
     //|4| - adding the removal of conanical mode to the line below. Now, instead of waiting for the user the press ENTER or RETURN, we are reading input byte-by-byte, also meaning we will exit the moment we press 'Q'.
@@ -65,9 +67,8 @@ void enableRawMode() {
     This is the last local flag we will be turning off.
     |8| */
     //   |!8!| Okay, for some reason, after adding IEXTEN, I could not get the program to print out it's ASCII character or be recognized at all. It just would print what was copied to the keyboard. I had to make some changes within visual studio codes shortcuts.
-    //   |!8!| It doesn't make sense, but I had to delete and re-add the shortcut for 'paste'. However, for some reason, it worked.
-    //   |!8!| This is not a proper solution, because if you ran it on your computer using VS Code, well, if you had the same problem, then the ASCII character 22 would not work appropriately, however, for the sake of this entire lesson
-                                    // THE SHOW GOES ON!!!! XDXDXD
+    //   |!8!| After checking if the program would react to Ctrl+V properly in standalone WSL, it does not - sad face - however, I have spent enough time and will take the L.
+    //   |!8!| Ctrl V does work in Visual Studio Code, however, I am expecting to not be able to use it, other than to paste.
     raw.c_lflag &= ~(ECHO | IEXTEN | ICANON | ISIG);
     //|2| c_lflag is a flag that Controls the Local behavior of the terminal. We are using the bitwise AND operator to turn off ECHO, a bitmask within c_lflag, a bitfield.
         //&= is the bitwise AND assignment operator. If we just had &= ECHO, we would turn off ALL other flags except for ECHO. We want to keep the current value, except we turn OFF ECHO by adding the bitwise NOT operator ~.
