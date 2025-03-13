@@ -1,8 +1,8 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <ctype.h>
 
 /*
     This is my first actual C project. I am following along from a tutorial on a website which can be found at link -
@@ -58,7 +58,17 @@ void enableRawMode() {
     //raw.c_lflag &= ~(ECHO); becomes - raw.c_lflag &= ~(ECHO | ICANON);
     //|6| removing the CTRL + C and CTRL + Z signals. This is done by turning off the ISIG flag in the c_lflag bitmask.
     //raw.c_lflag &= ~(ECHO | ICANON); becomes - raw.c_lflag &= ~(ECHO | ICANON | ISIG);
-    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+    /* |8|
+    We are going to add Ctrl + V's control character, by added the IEXTEN flag to the c_lflag bitmask. This flag will allow us to send a literal character to the terminal by pressing CTRL + V, followed by the character.
+    Right now, when pressing Ctrl + V, if you have copied anything to your system with Ctrl + C, it will paste, character by character, in our program. We are removing this built in ability by turning off IEXTEN.
+    So, raw.c_lflag &= ~(ECHO | ICANON | ISIG); becomes - raw.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
+    This is the last local flag we will be turning off.
+    |8| */
+    //   |!8!| Okay, for some reason, after adding IEXTEN, I could not get the program to print out it's ASCII character or be recognized at all. It just would print what was copied to the keyboard. I had to make some changes within visual studio codes shortcuts.
+    //   |!8!| It doesn't make sense, but I had to delete and re-add the shortcut for 'paste'. However, for some reason, it worked.
+    //   |!8!| This is not a proper solution, because if you ran it on your computer using VS Code, well, if you had the same problem, then the ASCII character 22 would not work appropriately, however, for the sake of this entire lesson
+                                    // THE SHOW GOES ON!!!! XDXDXD
+    raw.c_lflag &= ~(ECHO | IEXTEN | ICANON | ISIG);
     //|2| c_lflag is a flag that Controls the Local behavior of the terminal. We are using the bitwise AND operator to turn off ECHO, a bitmask within c_lflag, a bitfield.
         //&= is the bitwise AND assignment operator. If we just had &= ECHO, we would turn off ALL other flags except for ECHO. We want to keep the current value, except we turn OFF ECHO by adding the bitwise NOT operator ~.
         //&= clears specific bits while leaving others unchanged.
@@ -98,6 +108,6 @@ int main() {
             printf("%d ('%c')\n", c, c);
         }
     }
-
     return 0;
 }
+
