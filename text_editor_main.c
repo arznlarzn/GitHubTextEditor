@@ -60,6 +60,10 @@ void enableRawMode() {
     //raw.c_lflag &= ~(ECHO); becomes - raw.c_lflag &= ~(ECHO | ICANON);
     //|6| removing the CTRL + C and CTRL + Z signals. This is done by turning off the ISIG flag in the c_lflag bitmask.
     //raw.c_lflag &= ~(ECHO | ICANON); becomes - raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+    /* |10|
+    We are now turning of output processing, which is our \n or new line character. Before, pressing enter would cause our new line to also carriage return- after adding this, it will not.
+    |10| */
+    raw.c_oflag &= ~(OPOST);
     /* |8|
     We are going to add Ctrl + V's control character, by added the IEXTEN flag to the c_lflag bitmask. This flag will allow us to send a literal character to the terminal by pressing CTRL + V, followed by the character.
     Right now, when pressing Ctrl + V, if you have copied anything to your system with Ctrl + C, it will paste, character by character, in our program. We are removing this built in ability by turning off IEXTEN.
@@ -102,11 +106,12 @@ int main() {
     If the characters pressed are NOT control characters, we will print both their ASCII numbers, followed by their printable characters.
     Below is the if loop that checks if they are control characters, and also prints both their ASCII numbers (and) their printable characters.
     |5| */
+    // |10| To fix our new lines, which no longer carriage return, we must add \r for return, to correctly bring our cursor back to the left side of the screen.
     {
         if (iscntrl(c)) {
-            printf("%d\n", c);
+            printf("%d\r\n", c);
         } else {
-            printf("%d ('%c')\n", c, c);
+            printf("%d ('%c')\r\n", c, c);
         }
     }
     return 0;
