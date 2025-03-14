@@ -13,6 +13,7 @@ Makefile~
 *.x86_64
 *.hex
 *.bin
+text
 
 
 # Linker output
