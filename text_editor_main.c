@@ -27,6 +27,17 @@
     There are many steps where I will be going back and forth to create this project. Helps me - Helps you.
 */
 
+/* |15|
+    Okay, I'm starting to finally get bitwise AND and OR operators.
+    Here we are adding a define prepoccessor for to create CTRL keys.
+    We are comparing the key pressed to the ASCII value of the control character, which is the key pressed ANDed with 0x1f, or 31 in decimal.
+    This is a bitwise AND operator, which compares the bits of the two numbers and returns a new number with the bits that are set in both numbers.
+    BITS IN BOTH NUMBERS - 0x1f is 00011111 in binary, and the ASCII value of the key pressed in binary, such as A being 01000001, will return 00000001, which is 1 in decimal.
+    I'm feeling excited to work more with bitwise operators... mostly o.O
+|15|*/
+#define CTRL_KEY(k) ((k) & 0x1f)
+
+
 //|3| Creating a struct that holds the original termios attributes, before we change them- starting with the prototype.
 //Prototypes//
 struct termios orig_termios;
