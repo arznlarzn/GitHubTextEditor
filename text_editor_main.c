@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -30,15 +31,31 @@
 //Prototypes//
 struct termios orig_termios;
 
+/* |13|
+    Now, we are adding error handling. We are going to create a function that will print an error message and exit the program if there is an error.
+    We are going to use the perror() function from the stdlib.h library to print the error message.
+    exit() comes from stdlib.h and not only exits, but returns a value of 1. (Common indicator of an error)
+|13| */
+void die(const char *s) {
+    perror(s);
+    exit(1);
+}
+
+/* |14
+    Now we are adding our die function for error handling, to each of our functions.
+14 */
 //|3| Creating a disableRawMode function
 void disableRawMode() {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+        die("tcsetattr");
 }
 
 //|2| Creating a function that will begin to enable raw mode. Many steps following will be disabling flags to create a truly 'raw' mode.
 void enableRawMode() {
     //|3| getting original termios attributes and storing them at the memory address of 'orig_termios'
-    tcgetattr(STDIN_FILENO, &orig_termios);
+    // |14| the if statement wrapping our function is for error handling. If there is an error, we will call the die function, which will print the error message and exit the program.
+    if(tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+        die("tcgetattr");
     //|3| using atexit() from the stdlib.h library and calling disableRawMode() which will set termios back to its original attributes
     atexit(disableRawMode);
     //|2| struct termios is a struct variable that holds terminal attributes. Comes in the termios.h library.
@@ -87,7 +104,9 @@ void enableRawMode() {
         //&= is the bitwise AND assignment operator. If we just had &= ECHO, we would turn off ALL other flags except for ECHO. We want to keep the current value, except we turn OFF ECHO by adding the bitwise NOT operator ~.
         //&= clears specific bits while leaving others unchanged.
         //!!!DIVE FURTHER INTO BITFIELDS AFTER THIS PROJECT. We are flipping ones and zeros and it'd be too lengthy to explain here.!!!
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    //|14| the IF statment around our function is for errorhandling. If there is an error, we will call the die function, and our printf will tell us it is related to tcsetattr.
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
+        die("tcsetattr");
     //|2| tcsetattr() sets the terminal attributes. We are setting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are setting them to the attributes stored/changed in the variable 'raw'.
         //TCSAFLUSH is an argument that specifies when to apply the change. TCSAFLUSH disregards any input that hasn't been read and output that hasn't been written.
 }
@@ -105,7 +124,10 @@ int main() {
     |12| */
     while (1) {
         char c = '\0';
-        read(STDIN_FILENO, &c, 1);
+        if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
+            die("read");
+            // |14| We are checking if errno is equal to EAGAIN, because in Cygwin, if read() times out, it returns -1 with an errno of EAGAIN, instead of zero (like it's supposed to o.O - have to think about different terminals!)
+            // |14| So, we are making sure Cygwin behaves correctly.
     /* |1|
     -Now, we need to create a loop that continually reads for the input from the keyboard stream and saves it to the variable 'c'.
 
