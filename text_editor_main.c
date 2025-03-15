@@ -160,7 +160,8 @@ int main() {
         } else {
             printf("%d ('%c')\r\n", c, c);
         }
-        if (c == 'q') break;
+        // |16| we are changing the statement so that it no longer breaks on 'q' but on CTRL + q. This is made possible (and EASIER) because of our CTRL_KEY macro.
+        if (c == CTRL_KEY('q')) break;
     }
     return 0;
 }
