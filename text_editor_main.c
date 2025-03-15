@@ -107,9 +107,9 @@ void enableRawMode() {
     So, raw.c_lflag &= ~(ECHO | ICANON | ISIG); becomes - raw.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
     This is the last local flag we will be turning off.
     |8| */
-    //   |!8!| Okay, for some reason, after adding IEXTEN, I could not get the program to print out it's ASCII character or be recognized at all. It just would print what was copied to the keyboard. I had to make some changes within visual studio codes shortcuts.
-    //   |!8!| After checking if the program would react to Ctrl+V properly in standalone WSL, it does not - sad face - however, I have spent enough time and will take the L.
-    //   |!8!| Ctrl V does work in Visual Studio Code, however, I am expecting to not be able to use it, other than to paste.
+    // 8!!! So, in VSC or WSL, when pressing Ctrl + V, it still has the shortcut - paste, so I thought it wasn't working. HOWEVER
+    // 8!!! In Cygwin, it works. I am going to use Cygwin to test this project from now on, and it could be that I am missing something, however, the intended consequences are happening-
+    // 8!!! I am learning and more importantly, UNDERSTANDING AND RETAINING! LETS GO!!!!
     raw.c_lflag &= ~(ECHO | IEXTEN | ICANON | ISIG);
     //|2| c_lflag is a flag that Controls the Local behavior of the terminal. We are using the bitwise AND operator to turn off ECHO, a bitmask within c_lflag, a bitfield.
         //&= is the bitwise AND assignment operator. If we just had &= ECHO, we would turn off ALL other flags except for ECHO. We want to keep the current value, except we turn OFF ECHO by adding the bitwise NOT operator ~.
