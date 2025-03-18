@@ -132,6 +132,14 @@ char editorReadKey() {
     return c;
 }
 
+//|18| We are creating a function that will refresh the screen. We are going to use the ANSI escape code to clear the screen. This is done by writing the escape code to the standard output.
+//|18| \x means hexadecimal, 1b is 27 in hexadecimal, so ESC(Escape).
+//|18| Escape sequences all start with [. Then we have J which means clear the screen, and 2 which tells it the entire screen. By default it is zero.
+//|18| Finally, the 4 tells it there will be 4 bytes- 1b, [, J, and 2.
+void editorRefreshScreen() {
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+}
+
 //|17| We are creating a function that 'processes' the input and basically checks for Ctrl Q to quit, while returning a 0, telling us there was no error. We are no longer printing out anythign upon input. Not yet.
 void editorProcessKeypress() {
     char c = editorReadKey();
@@ -146,8 +154,10 @@ void editorProcessKeypress() {
 int main() {
     //|2| calling the function to enable raw mode.
     enableRawMode();
+    //|18| adding screen refresh to while loop-
     // |17| replacing the code below with functions editorReadKey and editorProcessKeypress
     while (1) {
+        editorRefreshScreen();
         editorProcessKeypress();
     }
     //|1|-Creating a variable that holds input from the keyboard input stream and name it 'c'
