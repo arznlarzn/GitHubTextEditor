@@ -63,7 +63,7 @@ void disableRawMode() {
 
 //|2| Creating a function that will begin to enable raw mode. Many steps following will be disabling flags to create a truly 'raw' mode.
 void enableRawMode() {
-    //|3| getting original termios attributes and storing them at the memory address of 'orig_termios'
+//|3| getting original termios attributes and storing them at the memory address of 'orig_termios'
     // |14| the if statement wrapping our function is for error handling. If there is an error, we will call the die function, which will print the error message and exit the program.
     if(tcgetattr(STDIN_FILENO, &orig_termios) == -1)
         die("tcgetattr");
@@ -121,10 +121,35 @@ void enableRawMode() {
     //|2| tcsetattr() sets the terminal attributes. We are setting the attributes of the file descriptor STDIN_FILENO (keyboard input stream), and we are setting them to the attributes stored/changed in the variable 'raw'.
         //TCSAFLUSH is an argument that specifies when to apply the change. TCSAFLUSH disregards any input that hasn't been read and output that hasn't been written.
 }
+//|17| We are moving th emain loop in main to functions- this is going to read our input, it is going to continue even if we don't get 1 byte of data to c because of the while loop, and will return the character that does get read. We've moved the error handling to this function as well.
+//By using nread != 1, we only stop when exactly one byte is read successfully.
+char editorReadKey() {
+    int nread;
+    char c;
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+        if (nread == -1 && errno != EAGAIN) die("read");
+    }
+    return c;
+}
+
+//|17| We are creating a function that 'processes' the input and basically checks for Ctrl Q to quit, while returning a 0, telling us there was no error. We are no longer printing out anythign upon input. Not yet.
+void editorProcessKeypress() {
+    char c = editorReadKey();
+
+    switch (c) {
+        case CTRL_KEY('q'):
+            exit(0);
+            break;
+    }
+}
 
 int main() {
     //|2| calling the function to enable raw mode.
     enableRawMode();
+    // |17| replacing the code below with functions editorReadKey and editorProcessKeypress
+    while (1) {
+        editorProcessKeypress();
+    }
     //|1|-Creating a variable that holds input from the keyboard input stream and name it 'c'
     //|1|-char's hold 1 byte of memory, or 8 bits, so this is enough to hold a single character- line below: char c;
     //char c;
@@ -133,10 +158,12 @@ int main() {
         while  (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') 
     to -
     |12| */
+            /* |17| moving all of this code up into functions and replacing with those functions
     while (1) {
         char c = '\0';
         if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
             die("read");
+            |17| */
             // |14| We are checking if errno is equal to EAGAIN, because in Cygwin, if read() times out, it returns -1 with an errno of EAGAIN, instead of zero (like it's supposed to o.O - have to think about different terminals!)
             // |14| So, we are making sure Cygwin behaves correctly.
     /* |1|
@@ -155,6 +182,7 @@ int main() {
     Below is the if loop that checks if they are control characters, and also prints both their ASCII numbers (and) their printable characters.
     |5| */
     // |10| To fix our new lines, which no longer carriage return, we must add \r for return, to correctly bring our cursor back to the left side of the screen.
+        /* |17| moving all of our code into functions and replacing with those functions
         if (iscntrl(c)) {
             printf("%d\r\n", c);
         } else {
@@ -164,5 +192,6 @@ int main() {
         if (c == CTRL_KEY('q')) break;
     }
     return 0;
+    |17| */
 }
 
