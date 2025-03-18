@@ -41,13 +41,15 @@
 //|3| Creating a struct that holds the original termios attributes, before we change them- starting with the prototype.
 //Prototypes//
 struct termios orig_termios;
-
+void editorRefreshScreen();
 /* |13|
     Now, we are adding error handling. We are going to create a function that will print an error message and exit the program if there is an error.
     We are going to use the perror() function from the stdlib.h library to print the error message.
     exit() comes from stdlib.h and not only exits, but returns a value of 1. (Common indicator of an error)
 |13| */
 void die(const char *s) {
+    //When we have an error, we are going to refresh the screen.
+    editorRefreshScreen();
     perror(s);
     exit(1);
 }
@@ -138,6 +140,8 @@ char editorReadKey() {
 //|18| Finally, the 4 tells it there will be 4 bytes- 1b, [, J, and 2.
 void editorRefreshScreen() {
     write(STDOUT_FILENO, "\x1b[2J", 4);
+    //|19|adding escape sequence to move our cursor to position 1;1H/ H is the command to position cursor, so you'd put numbers seperated by a semicolon to position it / since both arguments would be the same we can just put one H / This is only 3 bytes.
+    write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
 //|17| We are creating a function that 'processes' the input and basically checks for Ctrl Q to quit, while returning a 0, telling us there was no error. We are no longer printing out anythign upon input. Not yet.
@@ -146,6 +150,7 @@ void editorProcessKeypress() {
 
     switch (c) {
         case CTRL_KEY('q'):
+            editorRefreshScreen();
             exit(0);
             break;
     }
