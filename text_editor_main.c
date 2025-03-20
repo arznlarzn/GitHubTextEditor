@@ -134,6 +134,15 @@ char editorReadKey() {
     return c;
 }
 
+// |19| We are drawing tildes ~ down the left side of the screen, 50 of them. This is called in 'refresh screen' function.
+void editorDrawRows() {
+    int y;
+    for (y = 0; y < 50; y++) {
+        write(STDOUT_FILENO, "~\r\n", 3);
+    }
+}
+
+
 //|18| We are creating a function that will refresh the screen. We are going to use the ANSI escape code to clear the screen. This is done by writing the escape code to the standard output.
 //|18| \x means hexadecimal, 1b is 27 in hexadecimal, so ESC(Escape).
 //|18| Escape sequences all start with [. Then we have J which means clear the screen, and 2 which tells it the entire screen. By default it is zero.
@@ -141,6 +150,10 @@ char editorReadKey() {
 void editorRefreshScreen() {
     write(STDOUT_FILENO, "\x1b[2J", 4);
     //|19|adding escape sequence to move our cursor to position 1;1H/ H is the command to position cursor, so you'd put numbers seperated by a semicolon to position it / since both arguments would be the same we can just put one H / This is only 3 bytes.
+    write(STDOUT_FILENO, "\x1b[H", 3);
+//|19| We are calling the function to draw the rows of tildes.
+    editorDrawRows();
+//|19| Then we are moving the cursor back to the top left of the screen.
     write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
