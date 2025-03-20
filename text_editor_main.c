@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 /*
     This is my first actual C project. I am following along from a tutorial on a website which can be found at link -
@@ -40,8 +41,14 @@
 
 //|3| Creating a struct that holds the original termios attributes, before we change them- starting with the prototype.
 //Prototypes//
-struct termios orig_termios;
+
 void editorRefreshScreen();
+
+struct editorConfig {
+    struct termios orig_termios;
+};
+
+struct editorConfig E;
 /* |13|
     Now, we are adding error handling. We are going to create a function that will print an error message and exit the program if there is an error.
     We are going to use the perror() function from the stdlib.h library to print the error message.
@@ -59,7 +66,7 @@ void die(const char *s) {
 14 */
 //|3| Creating a disableRawMode function
 void disableRawMode() {
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
         die("tcsetattr");
 }
 
@@ -67,14 +74,14 @@ void disableRawMode() {
 void enableRawMode() {
 //|3| getting original termios attributes and storing them at the memory address of 'orig_termios'
     // |14| the if statement wrapping our function is for error handling. If there is an error, we will call the die function, which will print the error message and exit the program.
-    if(tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+    if(tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
         die("tcgetattr");
     //|3| using atexit() from the stdlib.h library and calling disableRawMode() which will set termios back to its original attributes
     atexit(disableRawMode);
     //|2| struct termios is a struct variable that holds terminal attributes. Comes in the termios.h library.
     //struct termios raw;
     //|3|changing struct termios raw; to- this way it takes the original attributes, and gives us a struct at which we can begin to make changes.
-    struct termios raw = orig_termios;
+    struct termios raw = E.orig_termios;
     /* |7|
     Now, we are removing an input flag, the first REAL input flag - IXON.
     The local flags below, ICANON and ISIG, both begin with I, which is supposed to indicate that they are input flags, but they are actually local flags.
