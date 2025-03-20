@@ -45,6 +45,8 @@
 void editorRefreshScreen();
 
 struct editorConfig {
+    int screenrows;
+    int screencols;
     struct termios orig_termios;
 };
 
@@ -188,9 +190,14 @@ void editorProcessKeypress() {
     }
 }
 
+void initEditor() {
+    if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+}
+
 int main() {
     //|2| calling the function to enable raw mode.
     enableRawMode();
+    initEditor();
     //|18| adding screen refresh to while loop-
     // |17| replacing the code below with functions editorReadKey and editorProcessKeypress
     while (1) {
