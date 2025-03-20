@@ -145,8 +145,8 @@ char editorReadKey() {
 
 //|20| Get the window size of the terminal at the time we Call the function. using #include <sys/ioctl.h>
 int getWindowSize(int *rows, int *cols) {
-    struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1 || ws.ws_col == 0) {
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
         return -1;
     } else {
         *cols = ws.ws_col;
@@ -156,9 +156,10 @@ int getWindowSize(int *rows, int *cols) {
 }
 
 // |19| We are drawing tildes ~ down the left side of the screen, 50 of them. This is called in 'refresh screen' function.
+//|21| changing rows from 50 to how many colomns and rows exist by the in our window.
 void editorDrawRows() {
     int y;
-    for (y = 0; y < 50; y++) {
+    for (y = 0; y < E.screenrows; y++) {
         write(STDOUT_FILENO, "~\r\n", 3);
     }
 }
