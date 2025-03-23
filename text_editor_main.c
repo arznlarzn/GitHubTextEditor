@@ -39,7 +39,7 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 
-//|3| Creating a struct that holds the original termios attributes, before we change them- starting with the prototype.
+//|3| Creating a struct that holds the original termios attributes, before we change them- starting with the prototype. 
 //Prototypes//
 
 void editorRefreshScreen();
@@ -143,13 +143,30 @@ char editorReadKey() {
     return c;
 }
 
-//|20| Get the window size of the terminal at the time we Call the function. using #include <sys/ioctl.h>
+//Okay, comments are going to just get even more out of hand if I add every single step. Here, we added a function that gets the cursor's position.
+int getCursorPosition(int* rows, int* cols) {
+  char buf[32];
+  unsigned int i = 0;
+  if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+  while (i < sizeof(buf) - 1) {
+    if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
+    if (buf[i] == 'R') break;
+    i++;
+  }
+  buf[i] = '\0';
+
+  if (buf[0] != '\x1b' || buf[1] != '[') return -1;
+  if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
+  
+  return 0;
+}
+
+//|20| Get the window size of the terminal at the time we Call the function. using #include <sys/ioctl.h> The second if statement is a fall back, that if we can't get the window size, we move the curosor foward and down 999 times (it will not go off the screen). So, we check to see if we can get the window size first, and then if we can't fwe move the cursor to count the rows and columns. Otherwise, we just record the windsozie from our struct.
 int getWindowSize(int *rows, int *cols) {
     struct winsize ws;
-    if (1 || ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
         if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) return -1;
-        editorReadKey();
-        return -1;
+        return getCursorPosition(rows, cols);
     } else {
         *cols = ws.ws_col;
         *rows = ws.ws_row;
@@ -157,12 +174,25 @@ int getWindowSize(int *rows, int *cols) {
     }
 }
 
+/* APPEND BUFFER*/
+
+stuct abuf {
+    char *b;
+    int len;
+};
+
+#define ABUF_INIT {NULL, 0}
+
 // |19| We are drawing tildes ~ down the left side of the screen, 50 of them. This is called in 'refresh screen' function.
 //|21| changing rows from 50 to how many colomns and rows exist by the in our window.
 void editorDrawRows() {
     int y;
     for (y = 0; y < E.screenrows; y++) {
-        write(STDOUT_FILENO, "~\r\n", 3);
+        write(STDOUT_FILENO, "~", 1);
+
+        if (y < E.screenrows -1) {
+            write(STDOUT_FILENO, "\r\n", 2);
+        }
     }
 }
 
