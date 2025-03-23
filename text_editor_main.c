@@ -37,6 +37,9 @@
     BITS IN BOTH NUMBERS - 0x1f is 00011111 in binary, and the ASCII value of the key pressed in binary, such as A being 01000001, will return 00000001, which is 1 in decimal.
     I'm feeling excited to work more with bitwise operators... mostly o.O
 |15|*/
+
+#define KOPY_VERSION "0.0.1"
+
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 
@@ -203,7 +206,20 @@ void abFree(struct abuf *ab) {
 void editorDrawRows(struct abuf *ab) {
     int y;
     for (y = 0; y < E.screenrows; y++) {
-        abAppend(ab, "~", 1);
+        if (y == E.screenrows / 4) {
+            char welcome[80];
+            int welcomelen = snprintf(welcome, sizeof(welcome), "Text Editor -- KopyKat version %s", KOPY_VERSION);
+            if (welcomelen > E.screencols) welcomelen = E.screencols;
+            int padding = (E.screencols - welcomelen) / 2;
+            if (padding) {
+                abAppend(ab, "~", 1);
+                padding--;
+            }
+            while (padding--) abAppend(ab, " ", 1);
+            abAppend(ab, welcome, welcomelen);
+        } else {
+            abAppend(ab, "~", 1);
+        }
 
         abAppend(ab, "\x1b[K", 3); // clear to end of line
         if (y < E.screenrows -1) {
