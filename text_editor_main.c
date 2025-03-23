@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -176,22 +177,37 @@ int getWindowSize(int *rows, int *cols) {
 
 /* APPEND BUFFER*/
 
-stuct abuf {
+struct abuf {
     char *b;
     int len;
 };
 
+//this abuf_init is acting as a constructor to our abuf type. It is initializing the buffer to NULL and the length to 0.
 #define ABUF_INIT {NULL, 0}
+
+void abAppend(struct abuf *ab, const char *s, int len) {
+    char *new =realloc(ab->b, ab->len + len);
+
+    if (new == NULL) return;
+    memcpy(&new[ab->len], s, len);
+    ab->b = new;
+    ab->len += len;
+}
+
+void abFree(struct abuf *ab) {
+    free(ab->b);
+}
 
 // |19| We are drawing tildes ~ down the left side of the screen, 50 of them. This is called in 'refresh screen' function.
 //|21| changing rows from 50 to how many colomns and rows exist by the in our window.
-void editorDrawRows() {
+void editorDrawRows(struct abuf *ab) {
     int y;
     for (y = 0; y < E.screenrows; y++) {
-        write(STDOUT_FILENO, "~", 1);
+        abAppend(ab, "~", 1);
 
+        abAppend(ab, "\x1b[K", 3); // clear to end of line
         if (y < E.screenrows -1) {
-            write(STDOUT_FILENO, "\r\n", 2);
+            abAppend(ab, "\r\n", 2);
         }
     }
 }
@@ -202,13 +218,19 @@ void editorDrawRows() {
 //|18| Escape sequences all start with [. Then we have J which means clear the screen, and 2 which tells it the entire screen. By default it is zero.
 //|18| Finally, the 4 tells it there will be 4 bytes- 1b, [, J, and 2.
 void editorRefreshScreen() {
-    write(STDOUT_FILENO, "\x1b[2J", 4);
+    struct abuf ab = ABUF_INIT;
+
+    abAppend(&ab, "\x1b[?25l", 6); // hide cursor
     //|19|adding escape sequence to move our cursor to position 1;1H/ H is the command to position cursor, so you'd put numbers seperated by a semicolon to position it / since both arguments would be the same we can just put one H / This is only 3 bytes.
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[H", 3);
 //|19| We are calling the function to draw the rows of tildes.
-    editorDrawRows();
+    editorDrawRows(&ab);
 //|19| Then we are moving the cursor back to the top left of the screen.
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[?25h", 6); // show cursor
+
+    write(STDOUT_FILENO, ab.b, ab.len);
+    abFree(&ab);
 }
 
 //|17| We are creating a function that 'processes' the input and basically checks for Ctrl Q to quit, while returning a 0, telling us there was no error. We are no longer printing out anythign upon input. Not yet.
