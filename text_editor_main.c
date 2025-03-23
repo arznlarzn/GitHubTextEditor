@@ -49,6 +49,7 @@
 void editorRefreshScreen();
 
 struct editorConfig {
+    int cx, cy;
     int screenrows;
     int screencols;
     struct termios orig_termios;
@@ -241,12 +242,33 @@ void editorRefreshScreen() {
     abAppend(&ab, "\x1b[H", 3);
 //|19| We are calling the function to draw the rows of tildes.
     editorDrawRows(&ab);
+
+    char buf[32];
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+    abAppend(&ab, buf, strlen(buf));
 //|19| Then we are moving the cursor back to the top left of the screen.
-    abAppend(&ab, "\x1b[H", 3);
+
     abAppend(&ab, "\x1b[?25h", 6); // show cursor
 
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
+}
+
+void editorMoveCursor(char key) {
+    switch (key) {
+        case 'a':
+            E.cx--;
+            break;
+        case 'd':
+            E.cx++;
+            break;
+        case 'w':
+            E.cy--;
+            break;
+        case 's':
+            E.cy++;
+            break;
+    }
 }
 
 //|17| We are creating a function that 'processes' the input and basically checks for Ctrl Q to quit, while returning a 0, telling us there was no error. We are no longer printing out anythign upon input. Not yet.
@@ -258,10 +280,19 @@ void editorProcessKeypress() {
             editorRefreshScreen();
             exit(0);
             break;
+
+        case 'w':
+        case 'a':
+        case 's':
+        case 'd':
+            editorMoveCursor(c);
+            break;
     }
 }
 
 void initEditor() {
+    E.cx = 0;
+    E.cy = 0;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
 }
 
